@@ -41,6 +41,8 @@ class BancoDeDados:
         parametro nome_tabela: Recebe nome da tabela que será criada.
         retorna: None
         '''
+        import mysql.connector
+        
         try:
             cursor = self.sistemaSGBD.cursor()
             cursor.execute(f'CREATE TABLE {nome_tabela}('
@@ -50,8 +52,9 @@ class BancoDeDados:
                             'PRIMARY KEY(id)'
                             ');DEFAULT CHARSET = latin1')
             print(f'A tabela "{nome_tabela}" foi criada com sucesso!.')
-        except Exception:
+        except mysql.connector.Error as erro:
             print(f'Não é possivel criar uma tabela com o nome "{nome_tabela}", talvez já exista!.')
+            print(erro)
         finally:
             if self.sistemaSGBD.is_connected():
                 cursor.close()
