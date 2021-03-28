@@ -49,6 +49,8 @@ class CriaBancoDeDados:
         try:
             cursor.execute(F'CREATE DATABASE {nome_banco} DEFAULT CHARACTER SET latin1 DEFAULT COLLATE latin1_general_ci;')
             print('O banco de dados foi criado com sucesso!.')
+            cursor.close()
+            self.__sistema.close()
         except:
             print('Não foi possivel criar um banco de dados com esse nome!.')
 
