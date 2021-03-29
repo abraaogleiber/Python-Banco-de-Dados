@@ -1,121 +1,120 @@
 
+
 from abc import ABC, abstractmethod
 
 
-class BancoDadosModelo(ABC):
-
-    def __init__(self, host, user):
-        '''
-        ------> Classe abstrata, somente para fins de estudo. Implementa um modelo de conexão a banco de dados.
-        parametro host: Recebe o endereço do SGBD.
-        parametro user: Recebe o usuário para acesso.
-        '''
-        self._host = host
-        self._user = user
-
-    @property
-    def GetHost(self):
-        return self._host
-
-    @property
-    def GetUser(self):
-        return self._user
-
+class ModeloBancoDeDados(ABC):
+    '''
+    -----> Modelo de banco de dados
+    '''
 
     @abstractmethod
-    def conectar_ao_sistema():
-        '''
-        ------> Toda classe que herda deste modelo deverá implementa esse método, para efetuar a conexão com o banco.
-        retorna: None
-        '''
+    def conectar_ao_SGBD(self):
         pass
 
 
-class BancoDeDados(BancoDadosModelo):
 
-    def __init__(self, host, user, banco_dados, passwd):
+class BancoDeDadosAlunos(ModeloBancoDeDados):
+
+    __host = 'localhost'
+    __user = 'root'
+    __database = 'alunos'
+
+    def __init__(self, passwd):
         '''
-        ------> Classe que implementa método para a inserção de dados em uma tabela.
-        parametro host: Recebe o endereço do SGBD.
-        parametro user: Recebe o usuário para acesso.
-        parametro banco_dados: Recebe o nome do banco de dados para acesso.
-        parametro passwd: Recebe a senha para acessar o sistema interno.
+        ------> Define um atributo, e invoca um método.
+        parametro passwd: Recebe a senha para acesso.
         '''
-        super().__init__(host=host, user=user)
-        self._banco_dados = banco_dados
         self._passwd = passwd
-
-        self.conectar_ao_sistema()
+        self.conectar_ao_SGBD()  #---passo---> (2)
 
     @property
-    def GetBancoDados(self):
-        return self._banco_dados
+    def GetHost(self):
+        return BancoDeDadosAlunos.__host
+    @GetHost.setter
+    def SetHost(self, novo_host):
+        BancoDeDadosAlunos.__host = novo_host
+
+    @property
+    def GetUser(self):
+        return BancoDeDadosAlunos.__user        # Área de Getters e Setters
+    @GetUser.setter
+    def SetUser(self, novo_user):
+        BancoDeDadosAlunos._user = novo_user
+
+    @property
+    def GetDatabase(self):
+        return BancoDeDadosAlunos.__database
 
     @property
     def GetPasswd(self):
         return self._passwd
 
 
-    def conectar_ao_sistema(self):
+    def conectar_ao_SGBD(self):
         '''
-        ------> Método responsável por se conectar ao sistema SGBD.
+        -------> Faz a conexão com o SGBDe chama um método.
         retorna: None
         '''
+        import time
         import mysql.connector
         from mysql.connector import Error
-        import time
 
         try:
-            self._sistema_interno = mysql.connector.connect(host=self.GetHost, user=self.GetUser, database=self.GetBancoDados, passwd=self.GetPasswd)
-
-            time.sleep(2)  # O fluxo do programa altera para esperar a resposta do sistema(SGBD).
-            if self._sistema_interno.is_connected():
-                print('Conexão estabelecida com o sistema SGBD de sua máquina!.')
+            self._conection = mysql.connector.connect(host=self.GetHost, user=self.GetUser, database=self.GetDatabase, passwd=self.GetPasswd)
+            if self._conection.is_connected():
+                print('Conexão estabelecida com o serviço MySql local.\n')
+                self.adicionar_dados_na_tabela() #---passo---> (3)
             else:
-                raise Error
-        except Error as problema:
-            print('Não foi possivel se conectar com ao gerenciador(SGBD) de sua máquina!!.')
-            exit('Descrição do problema: {}'.format(problema))
+                exit('Não foi possivel se conectar ao SGBD de sua máquina!.')
+        except Error as problema_identificado:
+            exit(f'Não foi possivel se conectar ao SGBD de sua máquina!. Erro: {problema_identificado}')
 
 
-    def desconectar_do_sistema(self):
+    def encerrar_conexao(self):
         '''
-        ------> Método responsável por desconectar o programa do sistema SGBD.
+        -------> Encerra a conexão com o SGBD.
         retorna: None
         '''
-        if self._sistema_interno.is_connected():
-            self._sistema_interno.close()
+        if self._conection.is_connected():
+            self._conection.commit()
+            self._conection.close()
         else:
-            print('O banco de dados já foi desconectado!.')
+            print('O programa já foi desconectado do serviço!.')
 
 
-    def adicionar_conteudo(self, tabela):
+    def adicionar_dados_na_tabela(self):
         '''
-        ------> Método responsável por adicionar conteúdos à tabela.
-        parametro tabela: Recebe o nome da tabela.
+        -------> Adiciona dados na tabela definida na instrução SQL e chama dois métodos.
         retorna: None
         '''
-        cursor = self._sistema_interno.cursor()
+        cursor = self._conection.cursor()
 
-        try:
-            if tabela == 'alunos':
-                nome = str(input('Nome: ')).strip().title()
-                n1 = float(input('1º Nota: '))
-                n2 = float(input('2º Nota: '))
-                n3 = float(input('3º Nota: '))
-                n4 = float(input('4º Nota: '))
-                cursor.execute(f"INSERT INTO {tabela} VALUES (DEFAULT, '{nome}', '{n1}', '{n2}', '{n3}', '{n4}');")
-            elif tabela == 'disciplinas':
-                m1 = str(input('1º Materia: ')).strip().capitalize()
-                m2 = str(input('2º Materia: ')).strip().capitalize()
-                m3 = str(input('3º Materia: ')).strip().capitalize()
-                m4 = str(input('4º Materia: ')).strip().capitalize()
-                cursor.execute(f"INSERT INTO {tabela} VALUES (DEFAULT, '{m1}', '{m2}', '{m3}', '{m4}');")
-            else:
-                exit('A tabela não foi encontrada, talves não exista.')
-        except:
-            exit('Não foi possivel adicionar os valores no banco!.')
-        finally:
-            self._sistema_interno.commit()
-            cursor.close()
-            self.desconectar_do_sistema()
+        inf = self.coleta_de_dados_aluno() #---passo---> (4)
+        cursor.execute(f"INSERT INTO alunos VALUES ('{inf[0]}', '{inf[1]}', '{inf[2]}', '{inf[3]}', '{inf[4]}');")
+        self.encerrar_conexao()  #---passo---> (5)
+
+
+    def coleta_de_dados_aluno(self):
+        '''
+        -------> Faz a coleta dos dados de um aluno
+        retorna: Uma lista com as informações de um aluno.
+        '''
+        aluno_infor = []
+
+        nome = str(input('Nome: ')).strip().title()
+        if not nome.isalpha():
+            exit('O nome deve ser alfabético!.. Tente novamente.')
+
+        aluno_infor.append(nome)
+        for iter in range(1, 5):
+            try:
+                aluno_infor.append(float(input(f'{iter}º Nota: ')))
+            except ValueError:
+                exit('As notas devem ser numericas!. Tente novamente.')
+        return aluno_infor
+
+
+
+if __name__ == '__main__':
+    teste = BancoDeDadosAlunos('abraao2020')  #---passo---> (1)
