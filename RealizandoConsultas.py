@@ -56,8 +56,13 @@ class BancoDeDados:
             media = (regis[1] + regis[2] + regis[3] + regis[4]) / 4
             print(
                   'Nome' + 'N1'.rjust(15) + 'N2'.rjust(15) + 'N3'.rjust(15) + 'N4'.rjust(15) + 'Media'.rjust(15) + '\n'
-                  f'{regis[0]}' + f'{regis[1]}'.rjust(13) + f'{regis[2]}'.rjust(15) + f'{regis[3]}'.rjust(15) + f'{regis[4]}'.rjust(15) + f'{media:.1f}\n'.rjust(15)
+                  f'{regis[0]}' + f'{regis[1]}'.rjust(13) + f'{regis[2]}'.rjust(15) + f'{regis[3]}'.rjust(15) + f'{regis[4]}'.rjust(15) + 			  f'{media:.1f}\n'.rjust(15)
                  )
+                 
+                 
+        if conexao.is_connected():
+       	    cursor.close()
+            conexao.close()
 
 
 
